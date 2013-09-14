@@ -6,6 +6,10 @@
 			"path": "algo1"
 		},
 		{
+			"name": "[Algorithms: Design and Analysis, Part 2]",
+			"path": "algo2"
+		},
+		{
 			"name": "[Building a Modern Computer From First Principles]",
 			"path": "nand2tetris"
 		},
