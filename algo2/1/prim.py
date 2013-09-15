@@ -2,9 +2,10 @@
 
 import sys
 import time
-from heapq import heappush, heappop, heapify
+import itertools
+from heapq import heappush, heappop
 from random import sample, choice
-from copy import deepcopy, copy
+
 
 '''
 Reads the graph into a dictionary:
@@ -101,45 +102,60 @@ def primNaive(edges):
 Heap-based implementation of Prim's algorithm.
 '''
 def primHeap(edges):
-  # Grab the nodes list
-  nodes = edges2Nodes(edges)
+  # Heap with REMOVE :)
+  pq = []
+  entry_finder = {}
+  REMOVED = '<removed-item>'
+  counter = itertools.count()
+
+  def add_item(item, priority=0):
+    'Add a new item or update the priority of an existing item'
+    if item in entry_finder:
+      remove_item(item)
+    count = next(counter)
+    entry = [priority, count, item]
+    entry_finder[item] = entry
+    heappush(pq, entry)
+
+  def remove_item(item):
+    'Mark an existing item as REMOVED.  Raise KeyError if not found.'
+    entry = entry_finder.pop(item)
+    entry[-1] = REMOVED
+
+  def pop_item():
+    'Remove and return the lowest priority item. Raise KeyError if empty.'
+    while pq:
+      priority, count, item = heappop(pq)
+      if item is not REMOVED:
+        del entry_finder[item]
+        return item
+    raise KeyError('Heap is empty')
 
   # Grab the adjency list
   adj = edges2Adjacency(edges)
   nodes = adj.keys()
+  MST = {}
 
-  # Will hold a linked list of nodes
-  L = dict([(n, None) for n in nodes])
+  # Source vertex
+  s = nodes.pop()
+  add_item(s, 0)
 
-  # Set the source node
-  s = choice(nodes)
+  # Add rest of nodes
+  for v in nodes:
+    add_item(v, float("inf"))
 
-  # Make the heap, make sure the source node has 0 key
-  heap = [(float("inf"), u) for u in nodes if u != s]
-  heap.append((0, s))
-  heapify(heap)
+  while entry_finder:
+    u = pop_item()
 
-  # Keep a dictionary for heap keys
-  heap_d = dict([(v,(k,v)) for (k,v) in heap])
-
-  while heap:
-    (key, u) = heappop(heap)
-    del heap_d[u]
     for v in adj[u]:
-      if v in heap_d and edges[(u,v)] < heap_d[v][0]:
+      if v in entry_finder and edges[(u,v)] < entry_finder[v][0]:
         # Update v's key to equal (u,v), and add to MST
-        heap.remove(heap_d[v])
-        L[v] = u
-        a = edges[(u,v)]
-        heap_d[v] = (a,v)
-        heap.append((a,v))
-    heapify(heap)
+        remove_item(v)
+        add_item(v, edges[(u,v)])
+        MST[v] = u
 
-  # Process L to get a list of edges
-  T = {}
-  for (u, v) in L.iteritems():
-    if u and v:
-      T[(u,v)] = edges[(u,v)]
+  # Process MST and get the edge costs
+  T = { edge: edges[edge] for edge in MST.iteritems() }
 
   return T
 
@@ -149,17 +165,18 @@ Simple profiling to show the heap implementation speedup.
 def profile(n):
   G = readGraph('edges.txt')
 
+  print "Timing %s runs of Prim, heap implementation..." % (n)
+  start = time.clock()
+  for x in range(0, n):
+    primHeap(G)
+  print "Total time: %ss \n" % (time.clock() - start)
+
   print "Timing %s runs of Prim, naive implementation..." % (n)
   start = time.clock()
   for x in range(0, n):
     primNaive(G)
   print "Total time: %ss \n" % (time.clock() - start)
 
-  print "Timing %s runs of Prim, heap implementation..." % (n)
-  start = time.clock()
-  for x in range(0, n):
-    primHeap(G)
-  print "Total time: %ss \n" % (time.clock() - start)
 
 # Profile a couple of runs of both implementations
 profile(5)
