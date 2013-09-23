@@ -12,7 +12,7 @@ Reads the graph into a dictionary:
 - keys are edges of the form (u, v)
 - values are edge weights
 '''
-def readGraph(filename):
+def readGraph(filename, duplicates=True):
   edges = {}
 
   with open(filename) as f:
@@ -22,7 +22,8 @@ def readGraph(filename):
 
       # Add the edge
       edges[(t[0], t[1])] = t[2]
-      edges[(t[1], t[0])] = t[2]
+      if duplicates:
+        edges[(t[1], t[0])] = t[2]
 
   return edges
 
@@ -159,19 +160,36 @@ def primHeap(edges):
 
   return T
 
+
+# '''
+# TODO
+# '''
+# def kruskal(edges):
+#   # Sort the edges
+#   E = sorted(edges, key = edges.get)
+#   # Get the nodes
+#   V = edges2Nodes(edges)
+#   n_V = len(V)
+#   # Simple union-find structure
+#   uf = []
+#   MST = {}
+
+
+
+
 '''
 Simple profiling to show the heap implementation speedup.
 '''
 def profile(n):
   G = readGraph('edges.txt')
 
-  print "Timing %s runs of Prim, heap implementation..." % (n)
+  print "Timing %s runs of Prim's MST, heap implementation..." % (n)
   start = time.clock()
   for x in range(0, n):
     primHeap(G)
   print "Total time: %ss \n" % (time.clock() - start)
 
-  print "Timing %s runs of Prim, naive implementation..." % (n)
+  print "Timing %s runs of Prim's MST, naive implementation..." % (n)
   start = time.clock()
   for x in range(0, n):
     primNaive(G)
@@ -184,3 +202,4 @@ profile(5)
 # Display the result
 print "Total MST cost: %s" % (sum(primHeap(readGraph('edges.txt')).values()))
 
+#kruskal(readGraph('small.txt', False))
