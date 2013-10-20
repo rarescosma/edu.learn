@@ -105,14 +105,3 @@ for n in scc.keys():
         exit()
 
 print "satisfiable"
-
-# leaders = set(v[1].leader for v in G.items())
-# scc = {}
-# for l in leaders:
-#     scc[l] = [v[1].label for v in G.items() if v[1].leader is l]
-# scc = scc.values()
-
-# del G
-# gc.collect()
-
-#print scc
