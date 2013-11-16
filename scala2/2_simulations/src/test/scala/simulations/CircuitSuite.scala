@@ -92,23 +92,37 @@ class CircuitSuite extends CircuitSimulator with FunSuite {
   def signals(wires: List[Wire]): List[Boolean] = {
     wires map { (w) => w.getSignal }
   }
-  
-  test("demux4") {
 
-    val out = List.fill(8)(new Wire)
-    val c = List.fill(3)(new Wire)
+  test("demuxN") {
+
+    val num_c = 8
+    val num_o = Math.pow(2, num_c).toInt
 
     val in = new Wire
+    val c = List.fill(num_c)(new Wire)
+    val out = List.fill(num_o)(new Wire)
+
     demux(in, c, out)
 
     in.setSignal(true)
-    c(0).setSignal(true)
-    c(1).setSignal(true)
-    c(2).setSignal(false)
-    run
-    
-    println(signals(out))
 
-    assert(signals(out) == List(false, true, false, false, false, false, false, false))
+    for (addr <- 1 to num_o) {
+      var x = (addr - 1).toBinaryString.toCharArray.toList map {
+        case '1' => true
+        case '0' => false
+      }
+
+      if (x.size < num_c){
+        x = List.fill(num_c - x.size){ false } ::: x
+      }
+
+      for(z <- 0 to num_c - 1) {
+        c(z).setSignal(x(z))
+      }
+      run
+
+      val expected = List.fill(num_o - addr){false} ::: (true :: List.fill(addr - 1){false})
+      assert(signals(out) == expected)
+    }
   }
 }
