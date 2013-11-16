@@ -5,6 +5,11 @@ import math.random
 class EpidemySimulator extends Simulator {
 
   def randomBelow(i: Int) = (random * i).toInt
+  def randomPair(i: Int, j: Int) = (randomBelow(i), randomBelow(j))
+  def randomDistinctPair(i: Int, j: Int, not: (Int, Int)): (Int, Int) = randomPair(i, j) match {
+      case `not` => randomDistinctPair(i, j, not)
+      case x => x
+  }
 
   protected[simulations] object SimConfig {
     val population: Int = 300
@@ -19,31 +24,47 @@ class EpidemySimulator extends Simulator {
     val moveTime = 5
 
     val prevalenceRate = 0.01
-    val transRate = 0.4
+    val transRate = 0.40
     val dieRate = 0.25
 
-    // extensions
+    // Air Traffic
     val airTraffic = false
-    val reducedMobility = false
+    val airRate = 0.01
+
+    // Reduced Mobility
+    val reducedMobility = true
+
+    // Chosen Few
     val chosenFew = false
+    val vaccinationRate = 0.05
   }
 
   import SimConfig._
 
-  def prePopulate: List[Person] = {
+  val persons: List[Person] = {
     var persons = List[Person]()
     val sickPersons = (prevalenceRate * population).toInt
+    val immunePersons = sickPersons + (vaccinationRate * population).toInt
     for (x <- 1 to population) {
       val p = new Person(x)
       if (x <= sickPersons) { p.getInfected }
+      else if(chosenFew && x <= immunePersons) { p.immune = true }
       persons = p :: persons
     }
     persons
   }
 
-  protected type MyRoom = (Int, Int)
+  private class Room (val r: Int, val c: Int) {
+    private val people = persons.filter { p => p.row == r & p.col == c }
 
-  val persons: List[Person] = prePopulate // to complete: construct list of persons
+    def coords: (Int, Int) = (r, c)
+
+    def has(predicate: (Person => Boolean)): Boolean = people exists predicate
+
+    def hasonly(predicate: (Person => Boolean)): Boolean = people forall predicate
+
+    def seemsHealthy: Boolean = hasonly ((p) => !p.visiblyInfectious)
+  }
 
   class Person(val id: Int) {
     var infected = false
@@ -55,45 +76,38 @@ class EpidemySimulator extends Simulator {
     var row: Int = randomBelow(roomRows)
     var col: Int = randomBelow(roomColumns)
 
-    afterDelay(0) { move }
-
-    def destination: Option[(Int, Int)] = {
-      val candidates = Array(
-        (row + 1, col),
-        (row + roomRows - 1, col),
-        (row, col + 1),
-        (row, col + roomColumns - 1)) map {
-          case (a, b) => (a % roomRows, b % roomColumns)
-        } filter {
-          case (room) => (inRoom(room, (p) => p.visiblyInfectious)).size == 0
-        }
-
-      candidates.size match {
-        case 0 => None
-        case _ => Some(candidates(randomBelow(candidates.size)))
-      }
-    }
-
-    def inRoom(r: MyRoom, predicate: (Person => Boolean)): List[Person] = {
-      (persons.find { p => p.row == r._1 & p.col == r._2 & predicate(p) }).toList
-    }
+    afterDelay(moveDelay) { move }
 
     def move {
-      def changeLocation(room: MyRoom) {
-        row = room._1; col = room._2
+      if (dead) return;
+      afterDelay(moveDelay) { move }
 
-        if ((inRoom(room, (p) => p.infectious).size > 0)
-          && (random < transRate)) getInfected
+      if(airTraffic & random < airRate) {
+        val (r, c) = randomDistinctPair(roomRows, roomColumns, (row,col))
+        changeLocation(new Room(r, c))
+      } else {
+        val candidates = for(
+          (r, c) <- List((row + 1, col), (row + roomRows - 1, col),
+                         (row, col + 1), (row, col+ roomColumns - 1));
+          room = new Room(r % roomColumns, c % roomColumns)
+          if( room.seemsHealthy )
+        ) yield room
 
-        afterDelay(randomBelow(moveTime)) { move }
+        val size = candidates.size
+        if(size > 0) changeLocation(candidates(randomBelow(size)))
       }
+    }
 
-      if (!dead) {
-        destination match {
-          case None => afterDelay(randomBelow(moveTime)) { move }
-          case Some(room) => changeLocation(room)
-        }
-      }
+    def changeLocation(room: Room) = {
+      val (r, c) = room.coords
+      row = r; col = c
+      if ( (room has ((p) => p.infectious))
+          && (random < transRate) ) getInfected
+    }
+
+    def moveDelay: Int = {
+      val delay = 1 + randomBelow(moveTime)
+      if(!reducedMobility){ delay } else if(!sick) { 2*delay } else { 4*delay }
     }
 
     def getInfected {
@@ -108,6 +122,8 @@ class EpidemySimulator extends Simulator {
 
     def DIE {
       if (random < dieRate) {
+        infected = false
+        sick = false
         dead = true
       }
     }
