@@ -7,7 +7,7 @@ class Wire {
   private var actions: List[Simulator#Action] = List()
 
   def getSignal: Boolean = sigVal
-  
+
   def setSignal(s: Boolean) {
     if (s != sigVal) {
       sigVal = s
@@ -67,59 +67,50 @@ abstract class CircuitSimulator extends Simulator {
     a1 addAction orAction
     a2 addAction orAction
   }
-  
+
   def orGate2(a1: Wire, a2: Wire, output: Wire) {
     val a1Inv, a2Inv, andOut = new Wire
     inverter(a1, a1Inv)
     inverter(a2, a2Inv)
     andGate(a1Inv, a2Inv, andOut)
     inverter(andOut, output)
-  }  
+  }
 
   def demux(in: Wire, c: List[Wire], out: List[Wire]) {
-    def nullDemux() {
-   	  val inSig = in.getSignal
-   	  afterDelay(1) { out.head.setSignal(inSig) }
-    }
-    
     c match {
       // No control bits => simply output the input
       case Nil => {
-    	in addAction nullDemux        
-      }
-      // Simple demux unit
-      case c :: Nil => {
-        def demuxUnit() {
-          val inSig = in.getSignal
-          val cSig = c.getSignal
-          val (o1, o2) = (out.head, out.tail.head)
-          afterDelay(1) { 
-            if(cSig) {
-              o1.setSignal(inSig)
-              o2.setSignal(false)
-            } else {
-              o2.setSignal(inSig)
-              o1.setSignal(false)
-            }
-          }
+        def nullDemux() {
+   	      val sig = in.getSignal
+   	      afterDelay(0) { out.head.setSignal(sig) }
         }
-        
-        c addAction demuxUnit
-        in addAction demuxUnit
+    	in addAction nullDemux
       }
       // Multiple control bits => recurse
-      case h :: t => {
-        // Split the lists in two
+      case msb :: t => {
+        // Split the output bits
+        val m1, m2 = new Wire
+
+        def unit() {
+          val sig = in.getSignal
+          val c = msb.getSignal
+          afterDelay(0) {
+            m1.setSignal(sig & c)
+            m2.setSignal(sig & !c)
+          }
+        }
+
+        msb addAction unit
+        in addAction unit
+
         val (out1, out2) = out.splitAt(out.size/2)
-        val m1, m2 = new Wire        
-        demux(in, List(h), List(m1,m2))
         demux(m1, t, out1)
         demux(m2, t, out2)
       }
     }
   }
-  
-  
+
+
 
 }
 
@@ -144,7 +135,7 @@ object Circuit extends CircuitSimulator {
     in2.setSignal(true)
     run
   }
-  
+
   def orGateExample {
     val in1, in2, out = new Wire
     orGate(in1, in2, out)
@@ -160,35 +151,35 @@ object Circuit extends CircuitSimulator {
 
     in2.setSignal(true)
     run
-    
+
     in1.setSignal(false)
     run
   }
-  
+
   def demuxExample {
     val in, c1, c2, out1, out2, out3, out4 = new Wire
     demux(in, List(c1, c2), List(out1, out2, out3, out4))
-    
+
     probe("c1", c1)
     probe("c2", c2)
     probe("out1", out1)
     probe("out2", out2)
     probe("out3", out3)
     probe("out4", out4)
-    
+
     in.setSignal(true)
     c1.setSignal(false)
     c2.setSignal(false)
     run
-    
+
     c1.setSignal(true)
     run
-    
+
     c2.setSignal(true)
     run
-    
+
     c1.setSignal(false)
-    run    
+    run
   }
 }
 
