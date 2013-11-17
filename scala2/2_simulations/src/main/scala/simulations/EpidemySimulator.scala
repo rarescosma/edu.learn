@@ -32,27 +32,27 @@ class EpidemySimulator extends Simulator {
     val airRate = 0.01
 
     // Reduced Mobility
-    val reducedMobility = true
+    val reducedMobility = false
 
     // Chosen Few
     val chosenFew = false
     val vaccinationRate = 0.05
+
+    // Population partition
+    val sickPersons = (prevalenceRate * population).toInt
+    val immunePersons = sickPersons + (vaccinationRate * population).toInt
   }
 
   import SimConfig._
 
-  val persons: List[Person] = {
-    var persons = List[Person]()
-    val sickPersons = (prevalenceRate * population).toInt
-    val immunePersons = sickPersons + (vaccinationRate * population).toInt
-    for (x <- 1 to population) {
-      val p = new Person(x)
-      if (x <= sickPersons) { p.getInfected }
-      else if(chosenFew && x <= immunePersons) { p.immune = true }
-      persons = p :: persons
-    }
-    persons
+  def populate(index: Int): Person = {
+    val p = new Person(index)
+    if (index <= sickPersons) { p.getInfected }
+    else if(chosenFew && index <= immunePersons) { p.immune = true }
+    p
   }
+
+  val persons: List[Person] = (1 to population).toList map populate
 
   private class Room (val r: Int, val c: Int) {
     private val people = persons.filter { p => p.row == r & p.col == c }
@@ -93,14 +93,16 @@ class EpidemySimulator extends Simulator {
           if( room.seemsHealthy )
         ) yield room
 
-        val size = candidates.size
-        if(size > 0) changeLocation(candidates(randomBelow(size)))
+        candidates.size match {
+          case 0 => {}
+          case 1 => changeLocation(candidates.head)
+          case _ => changeLocation(candidates(randomBelow(candidates.size)))
+        }
       }
     }
 
     def changeLocation(room: Room) = {
-      val (r, c) = room.coords
-      row = r; col = c
+      room.coords match { case (r,c) => row = r; col = c }
       if ( (room has ((p) => p.infectious))
           && (random < transRate) ) getInfected
     }
