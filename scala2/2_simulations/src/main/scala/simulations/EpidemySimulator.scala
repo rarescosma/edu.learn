@@ -53,7 +53,7 @@ class EpidemySimulator extends Simulator {
   }
 
   val persons: List[Person] = (1 to population).toList map populate
-
+  
   private class Room (val r: Int, val c: Int) {
     private val people = persons.filter { p => p.row == r & p.col == c }
 
@@ -61,9 +61,7 @@ class EpidemySimulator extends Simulator {
 
     def has(predicate: (Person => Boolean)): Boolean = people exists predicate
 
-    def hasonly(predicate: (Person => Boolean)): Boolean = people forall predicate
-
-    def seemsHealthy: Boolean = hasonly ((p) => !p.visiblyInfectious)
+    def seemsHealthy: Boolean = { !has ((p) => p.visiblyInfectious) }
   }
 
   class Person(val id: Int) {
@@ -86,18 +84,14 @@ class EpidemySimulator extends Simulator {
         val (r, c) = randomDistinctPair(roomRows, roomColumns, (row,col))
         changeLocation(new Room(r, c))
       } else {
-        val candidates = for(
+        lazy val candidates = for(
           (r, c) <- List((row + 1, col), (row + roomRows - 1, col),
                          (row, col + 1), (row, col+ roomColumns - 1));
           room = new Room(r % roomColumns, c % roomColumns)
           if( room.seemsHealthy )
         ) yield room
-
-        candidates.size match {
-          case 0 => {}
-          case 1 => changeLocation(candidates.head)
-          case _ => changeLocation(candidates(randomBelow(candidates.size)))
-        }
+        
+        if( !candidates.isEmpty ) { changeLocation(candidates(randomBelow(candidates.size))) }
       }
     }
 

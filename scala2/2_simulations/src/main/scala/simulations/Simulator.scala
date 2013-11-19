@@ -4,6 +4,8 @@ class Simulator {
   type Action = () => Unit
 
   protected type Agenda = List[WorkItem]
+  
+  protected var totalTime: Double = 0
 
   case class WorkItem(time: Int, action: Action)
 
@@ -17,15 +19,26 @@ class Simulator {
       else ag.head :: insert(ag.tail)
     agenda = insert(agenda)
   }
+  
+  def time[R](block: => R): (Double, R) = {
+    val t0 = System.nanoTime()
+    val result = block    // call-by-name
+    val t1 = System.nanoTime()
+    ((t1 - t0) / 1000000, result)
+  }
 
   protected[simulations] def next {
-    agenda match {
-      case List() => {}
-      case WorkItem(time, action) :: rest =>
-        agenda = rest
-        currentTime = time
-        action()
+    val(t, result) = time {
+      agenda match {
+        case List() => {}
+        case WorkItem(time, action) :: rest =>
+          agenda = rest
+          currentTime = time
+          action()
+      }
     }
+    
+    totalTime += t
   }
 
   def run {
