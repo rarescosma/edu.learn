@@ -1,0 +1,12 @@
+{
+  "name": "nodeschool.io-solutions",
+  "description": "Solutions to nodeschool.io bundles.",
+  "version": "1.0.0",
+  "author": "Rares Cosma",
+  "private": true,
+  "dependencies": {
+    "bl": "~0.7.0",
+    "strftime": "~0.8.0",
+    "through2-map": "~1.2.1"
+  }
+}
