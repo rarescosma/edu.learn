@@ -1,0 +1,29 @@
+{
+	"folders":
+	[
+		{
+			"path": "01.learnyounode"
+		},
+		{
+			"path": "02.stream-adventure"
+		},
+		{
+			"path": "03.bytewiser"
+		},
+		{
+			"path": "04.functional-javascript"
+		},
+		{
+			"path": "05.levelmeup"
+		},
+		{
+			"path": "06.expressworks"
+		},
+		{
+			"path": "07.promise-it-wont-hurt"
+		},
+		{
+			"path": "08.async-you"
+		}
+	]
+}
