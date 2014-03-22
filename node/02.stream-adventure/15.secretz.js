@@ -13,12 +13,12 @@ var through = require('through');
 
 var parser = tar.Parse();
 parser.on('entry', function (entry) {
-  if(entry.type !== 'File') return;
+  if (entry.type !== 'File') { return; }
 
   combine(
     entry,
     crypto.createHash('md5', { encoding: 'hex' }),
-    through(null, function () { this.queue(' ' + entry.path + '\n'); } )
+    through(null, function () { this.queue(' ' + entry.path + '\n'); })
   ).pipe(process.stdout);
 });
 

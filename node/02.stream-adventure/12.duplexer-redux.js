@@ -17,4 +17,4 @@ module.exports = function (counter) {
   });
 
   return duplexer(input, counter);
-}
+};

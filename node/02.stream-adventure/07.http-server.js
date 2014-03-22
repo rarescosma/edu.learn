@@ -11,7 +11,9 @@ var server = http.createServer(function (req, res) {
     req.pipe(through(function (buf) {
       this.queue(buf.toString().toUpperCase());
     })).pipe(res);
-  } else res.end('will i dream? \n');
+  } else {
+    res.end('will i dream? \n');
+  }
 });
 
-server.listen(parseInt(process.argv[2]));
+server.listen(process.argv[2]);

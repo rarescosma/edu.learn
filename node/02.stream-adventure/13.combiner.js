@@ -9,7 +9,7 @@ var zlib = require('zlib');
 
 
 module.exports = function () {
-  var genre = null, books = [], current = function() {
+  var genre = null, books = [], current = function () {
     return JSON.stringify({
       name: genre,
       books: books
@@ -18,25 +18,23 @@ module.exports = function () {
 
   return combine(
     split(),
-    through(function (line){
-      if (line.length === 0) return;
+    through(function (line) {
+      if (line.length === 0) { return; }
 
       var obj = JSON.parse(line);
 
-      if('genre' == obj.type) {
-        if(books.length) {
-          this.queue(current());
-        }
+      if ('genre' === obj.type) {
+        if (books.length) { this.queue(current()); }
 
         genre = obj.name;
         books = [];
       } else {
         books.push(obj.name);
       }
-    }, function() {
+    }, function () {
       this.queue(current());
       this.queue(null); // Make sure we close the stream
     }),
     zlib.createGzip()
   );
-}
+};
