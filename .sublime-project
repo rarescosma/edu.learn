@@ -30,6 +30,10 @@
 			"path": "ispd1"
 		},
 		{
+			"name": "[Nodeschool.io]",
+			"path": "node"
+		},
+		{
 			"name": "[Startup Engineering]",
 			"path": "startup_engineering"
 		}
