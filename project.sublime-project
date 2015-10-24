@@ -2,6 +2,10 @@
 	"folders":
 	[
 		{
+			"name": "[Algorithmic Thinking]",
+			"path": "algorithmicthink"
+		},
+		{
 			"name": "[Algorithms: Design and Analysis, Part 1]",
 			"path": "algo1"
 		},
@@ -32,6 +36,10 @@
 		{
 			"name": "[Nodeschool.io]",
 			"path": "node"
+		},
+		{
+			"name": "[Programming Languages]",
+			"path": "proglang"
 		},
 		{
 			"name": "[Startup Engineering]",
