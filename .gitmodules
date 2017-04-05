@@ -4,3 +4,6 @@
 [submodule "startup_engineering/week3/bitstarter"]
 	path = startup_engineering/week3/bitstarter
 	url = git@github.com:rarescosma/bitstarter.git
+[submodule "pythonic"]
+	path = pythonic
+	url = https://github.com/mikeckennedy/write-pythonic-code-demos.git
