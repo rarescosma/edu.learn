@@ -1,8 +1,8 @@
 [submodule "scala1/wiki"]
-	path = scala1/wiki
+	path = _coursera/scala1/wiki
 	url = https://github.com/lrytz/progfun-wiki.git
 [submodule "startup_engineering/week3/bitstarter"]
-	path = startup_engineering/week3/bitstarter
+	path = _coursera/startup_engineering/week3/bitstarter
 	url = git@github.com:rarescosma/bitstarter.git
 [submodule "pythonic"]
 	path = pythonic
