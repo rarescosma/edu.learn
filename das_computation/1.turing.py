@@ -19,6 +19,8 @@ def h_simulate(name='', width=20, **kwargs):
 
 """
 The X_B machine exhibits repetition and (to some extent) conditional
+being triggered by the same symbol in two different states:
+[('B', 's2'), ('B', 's4')]
 """
 X_B = {
     ('B', 's1'): ('X', 'R', 's2'),
@@ -66,6 +68,7 @@ And even lists of lists (in other words trees, yay!):
 ((1,11),(111,1111))
 """
 ADDER = {
+    # populate the tape with Church numerals
     ('B', 's1'): ('(', 'R', 's2'),
     ('B', 's2'): ('1', 'R', 's3'),
     ('B', 's3'): ('1', 'R', 's4'),
@@ -76,16 +79,22 @@ ADDER = {
     ('B', 's7b'): ('1', 'R', 's8'),
     ('B', 's8'): (')', 'R', 's9'),
 
+    # move the head to the left until we see a '+'
+    # then replace the '+' with a '1'
     ('B', 's9'): ('B', 'L', 's9'),
     (')', 's9'): (')', 'L', 's9'),
     ('1', 's9'): ('1', 'L', 's9'),
     ('+', 's9'): ('1', 'R', 's10'),
 
+    # move to the right until we see ')'
+    # then erase the ')'
     ('1', 's10'): ('1', 'R', 's10'),
     (')', 's10'): ('B', 'L', 's11'),
 
+    # replace the last '1' with ')'
     ('1', 's11'): (')', 'R', 's12'),
 
+    # nop, move to the right forever
     ('B', 's12'): ('B', 'R', 's12'),
 }
-h_simulate('ADDER', iterations=23)
+h_simulate('ADDER')
